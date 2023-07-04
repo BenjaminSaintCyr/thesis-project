@@ -1,0 +1,10 @@
+# source code
+k8s/
+
+# Build cache
+.bckp
+.cache
+
+# tmp files
+.vagrant
+*.~undo-tree~

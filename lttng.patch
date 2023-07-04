@@ -1,0 +1,53 @@
+diff --git a/hack/lib/golang.sh b/hack/lib/golang.sh
+index f23730b9446..36ce45466da 100755
+--- a/hack/lib/golang.sh
++++ b/hack/lib/golang.sh
+@@ -753,7 +753,7 @@ kube::golang::build_binaries_for_platform() {
+       -ldflags="${goldflags}"
+       -tags="${gotags:-}"
+     )
+-    CGO_ENABLED=0 kube::golang::build_some_binaries "${statics[@]}"
++    CGO_ENABLED=1 kube::golang::build_some_binaries "${statics[@]}"
+   fi
+ 
+   if [[ "${#nonstatics[@]}" != 0 ]]; then
+diff --git a/pkg/kubelet/pod_workers.go b/pkg/kubelet/pod_workers.go
+index e5805dbcf78..e6a0f70963e 100644
+--- a/pkg/kubelet/pod_workers.go
++++ b/pkg/kubelet/pod_workers.go
+@@ -23,6 +23,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	lttng "github.com/BenjaminSaintCyr/k8s-lttng-tpp"
+ 	v1 "k8s.io/api/core/v1"
+ 	"k8s.io/apimachinery/pkg/types"
+ 	"k8s.io/apimachinery/pkg/util/runtime"
+@@ -1295,6 +1296,7 @@ func (p *podWorkers) podWorkerLoop(podUID types.UID, podUpdates <-chan struct{})
+ 
+ 		case update.WorkType == TerminatedPod:
+ 			// we can shut down the worker
++			lttng.ReportEvent("Terminated", fmt.Sprintf("UID: %s, Name: %s", string(podUID), podRef.Name))
+ 			p.completeTerminated(podUID)
+ 			if start := update.Options.StartTime; !start.IsZero() {
+ 				metrics.PodWorkerDuration.WithLabelValues("terminated").Observe(metrics.SinceInSeconds(start))
+diff --git a/pkg/registry/core/pod/storage/storage.go b/pkg/registry/core/pod/storage/storage.go
+index 5bdf342d068..9ab2fe2beb9 100644
+--- a/pkg/registry/core/pod/storage/storage.go
++++ b/pkg/registry/core/pod/storage/storage.go
+@@ -22,6 +22,7 @@ import (
+ 	"net/http"
+ 	"net/url"
+ 
++	lttng "github.com/BenjaminSaintCyr/k8s-lttng-tpp"
+ 	"k8s.io/apimachinery/pkg/api/errors"
+ 	"k8s.io/apimachinery/pkg/api/meta"
+ 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+@@ -241,6 +242,7 @@ func (r *BindingREST) setPodHostAndAnnotations(ctx context.Context, podUID types
+ 		for k, v := range annotations {
+ 			pod.Annotations[k] = v
+ 		}
++		lttng.ReportEvent("Condition", fmt.Sprintf("Type: %s, UID: %s, Name: %s", string(api.PodScheduled), string(pod.UID), pod.Name))
+ 		podutil.UpdatePodCondition(&pod.Status, &api.PodCondition{
+ 			Type:   api.PodScheduled,
+ 			Status: api.ConditionTrue,
