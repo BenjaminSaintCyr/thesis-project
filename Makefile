@@ -133,6 +133,7 @@ trace:
 	lttng enable-event -k -c kube-channel --syscall mount,umount # mount
 	lttng enable-event -k -c kube-channel --syscall timer*,clock* # timer/clock
 	lttng enable-event -k -c kube-channel --syscall unshare,setns # namespace
+	lttng add-context -k perf:LLC-load-misses perf:LLC-store-misses -t perf:LLC-prefetch-misses #  cache misses
 	lttng add-context -k -t pid -t tid -t procname
 	lttng add-context -k -t vpid -t vtid -t cgroup_ns # namespace context
 	lttng start
