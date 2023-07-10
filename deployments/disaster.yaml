@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stress-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress
+  template:
+    metadata:
+      labels:
+        app: stress
+    spec:
+      containers:
+      - name: stress
+        image: progrium/stress
+        command: ["stress"]
+        args: ["--cpu", "2", "--io", "1", "--vm", "2", "--vm-bytes", "128M" ]
+        resources:
+          limits:
+            cpu: "80m"
+          requests:
+            cpu: "40m"
