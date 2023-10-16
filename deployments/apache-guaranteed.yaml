@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qos-example
+  labels:
+    name: qos-example
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-service-nautilus
+  namespace: qos-example
+spec:
+  type: NodePort
+  selector:
+    app: httpd_app_nautilus
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-deployment-nautilus
+  namespace: qos-example
+  labels:
+    app: httpd_app_nautilus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: httpd_app_nautilus
+  template:
+    metadata:
+      labels:
+        app: httpd_app_nautilus
+    spec:
+      containers:
+        - name: httpd-container-nautilus
+          image: httpd:latest
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+            requests:
+              cpu: "1"
+              memory: "1Gi"
