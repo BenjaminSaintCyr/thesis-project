@@ -1,0 +1,37 @@
+#!/bin/bash
+
+DEPLOYMENT_NAME=nginx
+MANIFEST=./manifests/nginx.yaml
+NAMESPACE=default
+REPLICAS=3
+SAMPLES=30
+CSV_FILE=timestamps.csv
+
+# Write header to CSV file
+echo "sample,creation_time,ready_time" > $CSV_FILE
+
+for ((i=1; i<=SAMPLES; i++))
+do
+    echo "[$i/$SAMPLES]"
+    # Create new deployment
+    kubectl apply -f $MANIFEST
+
+    # Wait for deployment to become ready
+    kubectl wait --for=condition=available --timeout=600s deployment/$DEPLOYMENT_NAME -n $NAMESPACE
+
+    # Get creation and readiness timestamps
+    CREATION_TIME=$(kubectl get deployment $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.metadata.creationTimestamp}')
+    READY_TIME=$(kubectl get deployment $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.status.conditions[?(@.type=="Available")].lastTransitionTime}')
+
+    # Delete old deployment
+    kubectl delete -f $MANIFEST
+
+    # Write timestamps to CSV file
+    echo "$i,$CREATION_TIME,$READY_TIME" >> $CSV_FILE
+
+    # Waiting before restarting the experiment
+    while kubectl get pods -n $NAMESPACE | grep $DEPLOYMENT_NAME; do
+        echo "Waiting for old pods to be deleted..."
+        sleep 1
+    done
+done

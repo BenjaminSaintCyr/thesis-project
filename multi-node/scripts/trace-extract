@@ -1,0 +1,2 @@
+#!/bin/bash
+vagrant scp controller-0:/home/vagrant/lttng-traces .

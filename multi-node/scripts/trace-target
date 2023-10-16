@@ -1,0 +1,35 @@
+#!/bin/bash
+
+kubectl label nodes worker-0 trace-target=true
+
+cat <<'EOF' | vagrant ssh controller-0 -- lttng-relayd -d &
+EOF
+
+# Loop through controllers and run commands in parallel
+for i in {0..2}; do
+    (
+        cat <<'EOF' | vagrant ssh "controller-${i}" -- sudo bash
+lttng create -U net://192.168.199.10 full-kubernetes
+lttng enable-event -u -a
+lttng start
+EOF
+    ) &
+done
+
+# Run commands for worker-0 in parallel
+(
+    cat <<'EOF' | vagrant ssh worker-0 -- sudo bash
+lttng create -U net://192.168.199.10 full-kubernetes
+lttng enable-channel --kernel kube-channel --num-subbuf=4 --subbuf-size=32M
+lttng enable-channel --userspace kube-channel --num-subbuf=4 --subbuf-size=32M
+lttng enable-event -u -a -c kube-channel
+lttng add-context -u -t vpid -t vtid -t procname
+lttng enable-event -k -a -c kube-channel
+lttng add-context -k -t pid -t tid -t procname
+lttng add-context -k -t vpid -t vtid -t cgroup_ns
+lttng start
+EOF
+) &
+
+# Wait for all background tasks to finish
+wait

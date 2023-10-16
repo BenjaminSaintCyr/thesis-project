@@ -1,0 +1,22 @@
+#!/bin/bash
+
+cat <<'EOF' | vagrant ssh controller-0 -- lttng-relayd -d
+EOF
+
+for i in {0..2}; do
+  cat <<'EOF' | vagrant ssh "controller-${i}" -- sudo bash
+lttng create -U net://192.168.199.10 full-kubernetes
+lttng enable-event -u -a
+lttng start
+
+EOF
+done
+
+for i in {0..2}; do
+  cat <<'EOF' | vagrant ssh "worker-${i}" -- sudo bash
+lttng create -U net://192.168.199.10 full-kubernetes
+lttng enable-event -u -a
+lttng start
+EOF
+done
+

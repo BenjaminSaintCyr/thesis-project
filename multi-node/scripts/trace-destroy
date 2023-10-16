@@ -1,0 +1,15 @@
+#!/bin/bash
+
+for i in {0..2}; do
+    (
+  cat <<'EOF' | vagrant ssh "controller-${i}" -- sudo bash
+lttng destroy
+EOF
+)
+done
+
+for i in {0..2}; do
+  cat <<'EOF' | vagrant ssh "worker-${i}" -- sudo bash
+lttng destroy
+EOF
+done

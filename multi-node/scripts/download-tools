@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+pushd "${dir}/../tools/"
+trap 'popd' EXIT
+
+echo "Downloading tools ..."
+
+# shellcheck source=versions.bash
+source "${dir}/versions.bash"
+
+echo ${pwd}
+cp ${dir}/../k8s/_output/bin/* . # assume the instrumented version is in the root directory
+
+curl -sSL \
+  -O "https://github.com/coreos/etcd/releases/download/${etcd_version}/etcd-${etcd_version}-linux-amd64.tar.gz"
+
+tar -xf "etcd-${etcd_version}-linux-amd64.tar.gz"
+
+curl -sSL \
+  -O "https://github.com/cri-o/cri-o/releases/download/${crio_version}/cri-o.amd64.${crio_version}.tar.gz" \
+
+tar -xf "cri-o.amd64.${crio_version}.tar.gz"
+mv "cri-o" crio
+
+curl -sSL \
+  -O "https://github.com/containous/traefik/releases/download/${traefik_version}/traefik_linux-amd64"
+
+mv traefik_linux-amd64 traefik
+
+chmod +x traefik
