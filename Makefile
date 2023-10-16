@@ -97,26 +97,9 @@ $(TPP_DIR)/k8s-tpp.o:
 	@echo "* Building the trace point provider..."
 	(cd $(TPP_DIR) && make clean && make)
 
-# Deploy
-
-.PHONY: setup-vms
-setup-vms: $(K8S_ZIP) $(PATCH_FILE) Makefile
-	@echo "* Setting up the vms"
-	vagrant up
-	vagrant scp Makefile .
-	vagrant scp $(PATCH_FILE) .
-	vagrant scp $(K8S_ZIP) .
-	vagrant ssh -- make build-k8s
-
-.PHONY: deploy-k8s
-deploy-k8s:
-	@echo "* Distributing kubernetes binaries to vms"
-	./deploy_k8s.sh
-
 .PHONY: clean
 clean:
 	rm -rf $(K8S_DIR) $(CACHE_DIR)
-	vagrant destroy -f
 
 # Experiment
 .PHONY: trace
@@ -133,7 +116,7 @@ trace:
 	lttng enable-event -k -c kube-channel --syscall mount,umount # mount
 	lttng enable-event -k -c kube-channel --syscall timer*,clock* # timer/clock
 	lttng enable-event -k -c kube-channel --syscall unshare,setns # namespace
-	lttng add-context -k perf:LLC-load-misses perf:LLC-store-misses -t perf:LLC-prefetch-misses #  cache misses
+	lttng enable-event -k -c kube-channel --syscall recv
 	lttng add-context -k -t pid -t tid -t procname
 	lttng add-context -k -t vpid -t vtid -t cgroup_ns # namespace context
 	lttng start
