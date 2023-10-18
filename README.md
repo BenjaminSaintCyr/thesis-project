@@ -75,3 +75,13 @@ vagrant destroy -f # Destroys any previous environment setup
 ```
 
 This process deploys a Kubernetes cluster across multiple virtual machines, with 3 master nodes and 3 worker nodes, ready for your testing and development.
+
+## Acknowledgments
+
+The multi-node environement makes use of components from [`kubernetes-the-hard-way-vagrant`](https://github.com/kinvolk-archives/kubernetes-the-hard-way-vagrant/tree/master). We would like to thank the authors of the `kubernetes-the-hard-way-vagrant` project for creating their work and making it available for reuse under the terms of the Apache License 2.0.
+
+We adapted the kubernetes-the-hard-way-vagrant code by updating various dependencies, integrating LTTng for enhanced tracing capabilities, and implementing our custom instrumentation within the Kubernetes setup
+
+## License
+
+This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). A copy of this license is also present in our repository in the `LICENSE` file.
